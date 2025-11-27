@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 import { useTranslation } from "react-i18next";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import logo from "@/assets/logo.png";
 
 interface CalendarHeaderProps {
   currentDate: Date;
@@ -32,9 +33,12 @@ export const CalendarHeader = ({
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         {/* Date and Navigation - Stack on mobile */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4">
-          <h1 className="text-xl md:text-2xl font-bold">
-            {format(currentDate, "MMMM yyyy")}
-          </h1>
+          <div className="flex items-center gap-2 sm:gap-3">
+            <img src={logo} alt="Logo" className="w-8 h-8 md:w-10 md:h-10" />
+            <h1 className="text-xl md:text-2xl font-bold">
+              {format(currentDate, "MMMM yyyy")}
+            </h1>
+          </div>
           <div className="flex items-center gap-1 sm:gap-2">
             <Button variant="outline" size="sm" className="h-8 w-8 md:h-10 md:w-10" onClick={onPreviousWeek}>
               <ChevronLeft className="w-3 h-3 md:w-4 md:h-4" />
