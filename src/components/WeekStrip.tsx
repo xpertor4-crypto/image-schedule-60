@@ -1,4 +1,4 @@
-import { format, startOfWeek, addDays, isSameDay } from "date-fns";
+import { format, addDays, isSameDay, subDays } from "date-fns";
 import { cn } from "@/lib/utils";
 
 interface WeekStripProps {
@@ -7,8 +7,9 @@ interface WeekStripProps {
 }
 
 export const WeekStrip = ({ currentDate, onDateSelect }: WeekStripProps) => {
-  const weekStart = startOfWeek(currentDate, { weekStartsOn: 0 });
-  const days = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
+  // Center the current day by starting 3 days before it
+  const centerStart = subDays(currentDate, 3);
+  const days = Array.from({ length: 7 }, (_, i) => addDays(centerStart, i));
   const today = new Date();
 
   return (
