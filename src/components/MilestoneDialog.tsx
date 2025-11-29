@@ -16,6 +16,7 @@ interface MilestoneDialogProps {
     isLocked: boolean;
     isActive: boolean;
     isCompleted: boolean;
+    requiredPoints: number;
   } | null;
 }
 
@@ -45,10 +46,16 @@ export const MilestoneDialog = ({ open, onOpenChange, milestone }: MilestoneDial
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-4">
-          <div className="flex items-center gap-2">
-            <Badge variant={milestone.isCompleted ? "default" : milestone.isActive ? "secondary" : "outline"}>
+          <div className="flex flex-col gap-3">
+            <Badge variant={milestone.isCompleted ? "default" : milestone.isActive ? "secondary" : "outline"} className="w-fit">
               {milestone.isCompleted ? "Completed" : milestone.isActive ? "In Progress" : "Locked"}
             </Badge>
+            <div className="text-sm text-muted-foreground">
+              <span className="font-medium">Required Points:</span> {milestone.requiredPoints}
+            </div>
+            <div className="text-sm text-muted-foreground">
+              Complete daily tasks to earn 4 points per task. Maintain your streak to progress!
+            </div>
           </div>
         </div>
       </DialogContent>

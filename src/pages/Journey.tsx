@@ -17,37 +17,69 @@ interface JourneyNode {
   isCompleted: boolean;
   position: { x: number; y: number };
   label?: string;
+  requiredPoints: number;
 }
+
+// Level requirements array - each value * 4 = points needed for that level
+const LEVEL_REQUIREMENTS = [3, 6, 12, 14, 7, 10, 14, 7, 20, 30, 30, 30, 30, 30, 30, 30];
+
+const calculateLevel = (totalPoints: number): number => {
+  let level = 1;
+  for (let i = 0; i < LEVEL_REQUIREMENTS.length; i++) {
+    const requiredPoints = LEVEL_REQUIREMENTS[i] * 4;
+    if (totalPoints >= requiredPoints) {
+      level = i + 1;
+    } else {
+      break;
+    }
+  }
+  return level;
+};
+
+const checkConsecutiveMissedDays = async (userId: string): Promise<number> => {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  
+  let consecutiveMissed = 0;
+  let checkDate = new Date(today);
+  checkDate.setDate(checkDate.getDate() - 1); // Start from yesterday
+  
+  // Check last 30 days for missed days
+  for (let i = 0; i < 30; i++) {
+    const dateStr = checkDate.toISOString().split('T')[0];
+    const { data, error } = await supabase
+      .from('events')
+      .select('id, status, completed_at')
+      .eq('user_id', userId)
+      .gte('start_time', `${dateStr}T00:00:00`)
+      .lt('start_time', `${dateStr}T23:59:59`);
+    
+    if (error) break;
+    
+    const hasCompletedTask = data?.some(event => event.status === 'completed');
+    
+    if (!hasCompletedTask && data && data.length > 0) {
+      consecutiveMissed++;
+      checkDate.setDate(checkDate.getDate() - 1);
+    } else {
+      break; // Stop at first completed or no tasks day
+    }
+  }
+  
+  return consecutiveMissed;
+};
 
 const Journey = () => {
   const { t } = useTranslation();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const [userPoints, setUserPoints] = useState(1250);
+  const [userPoints, setUserPoints] = useState(0);
+  const [currentLevel, setCurrentLevel] = useState(1);
+  const [consecutiveMissedDays, setConsecutiveMissedDays] = useState(0);
   const [selectedMilestone, setSelectedMilestone] = useState<JourneyNode | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const navigate = useNavigate();
   const activeNodeRef = useRef<HTMLButtonElement>(null);
-
-  // Define journey nodes with positions along the path (bottom to top)
-  const journeyNodes: JourneyNode[] = [
-    { id: 1, level: "Level 1", isLocked: false, isActive: false, isCompleted: true, position: { x: 50, y: 95 }, label: "Beginner" },
-    { id: 2, level: "Level 2", isLocked: false, isActive: false, isCompleted: true, position: { x: 20, y: 89 } },
-    { id: 3, level: "Level 3", isLocked: false, isActive: true, isCompleted: false, position: { x: 75, y: 83 } },
-    { id: 4, level: "Level 4", isLocked: true, isActive: false, isCompleted: false, position: { x: 25, y: 77 } },
-    { id: 5, level: "Level 5", isLocked: true, isActive: false, isCompleted: false, position: { x: 80, y: 71 } },
-    { id: 6, level: "Level 6", isLocked: true, isActive: false, isCompleted: false, position: { x: 20, y: 65 }, label: "Intermediate" },
-    { id: 7, level: "Level 7", isLocked: true, isActive: false, isCompleted: false, position: { x: 75, y: 59 } },
-    { id: 8, level: "Level 8", isLocked: true, isActive: false, isCompleted: false, position: { x: 25, y: 53 } },
-    { id: 9, level: "Level 9", isLocked: true, isActive: false, isCompleted: false, position: { x: 70, y: 47 } },
-    { id: 10, level: "Level 10", isLocked: true, isActive: false, isCompleted: false, position: { x: 30, y: 41 } },
-    { id: 11, level: "Level 11", isLocked: true, isActive: false, isCompleted: false, position: { x: 75, y: 35 }, label: "Advanced" },
-    { id: 12, level: "Level 12", isLocked: true, isActive: false, isCompleted: false, position: { x: 25, y: 29 } },
-    { id: 13, level: "Level 13", isLocked: true, isActive: false, isCompleted: false, position: { x: 70, y: 23 } },
-    { id: 14, level: "Level 14", isLocked: true, isActive: false, isCompleted: false, position: { x: 30, y: 17 } },
-    { id: 15, level: "Level 15", isLocked: true, isActive: false, isCompleted: false, position: { x: 65, y: 11 } },
-    { id: 16, level: "Level 16", isLocked: true, isActive: false, isCompleted: false, position: { x: 50, y: 5 }, label: "Master" },
-  ];
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
@@ -62,7 +94,7 @@ const Journey = () => {
       if (!session) {
         navigate("/auth");
       } else {
-        fetchUserData();
+        fetchUserData(session.user.id);
       }
       setLoading(false);
     });
@@ -81,19 +113,30 @@ const Journey = () => {
     }
   }, [loading]);
 
-  const fetchUserData = async () => {
+  const fetchUserData = async (userId: string) => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        const { data } = await supabase
-          .from("leaderboard_users")
-          .select("total_points")
-          .eq("id", user.id)
-          .single();
+      // Fetch completed events - each completed task = 4 points
+      const { data, error } = await supabase
+        .from('events')
+        .select('status, completed_at')
+        .eq('user_id', userId)
+        .eq('status', 'completed');
+
+      if (!error && data) {
+        const points = data.length * 4; // Each completed task = 4 points
+        let calculatedLevel = calculateLevel(points);
         
-        if (data) {
-          setUserPoints(data.total_points);
+        // Check for consecutive missed days
+        const missedDays = await checkConsecutiveMissedDays(userId);
+        setConsecutiveMissedDays(missedDays);
+        
+        // Apply level fallback for missed consecutive days
+        if (missedDays > 0) {
+          calculatedLevel = Math.max(1, calculatedLevel - missedDays);
         }
+        
+        setUserPoints(points);
+        setCurrentLevel(calculatedLevel);
       }
     } catch (error) {
       console.error("Error fetching user data:", error);
@@ -105,12 +148,49 @@ const Journey = () => {
     setDialogOpen(true);
   };
 
-  const getRank = (points: number): string => {
-    if (points < 500) return "Novice";
-    if (points < 1000) return "Apprentice";
-    if (points < 2000) return "Expert";
-    return "Master";
+  const getRank = (level: number): string => {
+    if (level >= 15) return "Master";
+    if (level >= 10) return "Advanced";
+    if (level >= 5) return "Intermediate";
+    return "Beginner";
   };
+
+  // Generate journey nodes dynamically based on level requirements
+  const journeyNodes: JourneyNode[] = LEVEL_REQUIREMENTS.map((req, index) => {
+    const levelNumber = index + 1;
+    const requiredPoints = req * 4;
+    const isCompleted = currentLevel > levelNumber;
+    const isActive = currentLevel === levelNumber;
+    const isLocked = currentLevel < levelNumber;
+    
+    // Define positions along a winding path (bottom to top)
+    const positions = [
+      { x: 50, y: 95 }, { x: 20, y: 89 }, { x: 75, y: 83 }, { x: 25, y: 77 },
+      { x: 80, y: 71 }, { x: 20, y: 65 }, { x: 75, y: 59 }, { x: 25, y: 53 },
+      { x: 70, y: 47 }, { x: 30, y: 41 }, { x: 75, y: 35 }, { x: 25, y: 29 },
+      { x: 70, y: 23 }, { x: 30, y: 17 }, { x: 65, y: 11 }, { x: 50, y: 5 },
+    ];
+    
+    const position = positions[index] || { x: 50, y: 50 };
+    
+    // Add labels at certain milestones
+    let label;
+    if (levelNumber === 1) label = "Beginner";
+    else if (levelNumber === 5) label = "Intermediate";
+    else if (levelNumber === 10) label = "Advanced";
+    else if (levelNumber === 16) label = "Master";
+    
+    return {
+      id: levelNumber,
+      level: `Level ${levelNumber}`,
+      isLocked,
+      isActive,
+      isCompleted,
+      position,
+      label,
+      requiredPoints,
+    };
+  });
 
   if (loading) {
     return (
@@ -124,7 +204,7 @@ const Journey = () => {
     return null;
   }
 
-  const currentRank = getRank(userPoints);
+  const currentRank = getRank(currentLevel);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-muted/30 to-background pb-24 pt-8 px-4">
@@ -144,10 +224,20 @@ const Journey = () => {
                 {currentRank}
               </Badge>
             </div>
-            <p className="text-3xl font-bold text-foreground">
-              {userPoints.toLocaleString()}
-            </p>
-            <p className="text-xs text-muted-foreground">XP Points</p>
+            <div className="flex items-center gap-2">
+              <p className="text-3xl font-bold text-foreground">
+                {userPoints.toLocaleString()}
+              </p>
+              <p className="text-sm text-muted-foreground">pts</p>
+            </div>
+            <div className="flex items-center gap-2 mt-1">
+              <p className="text-sm font-semibold text-foreground">Level {currentLevel}</p>
+              {consecutiveMissedDays > 0 && (
+                <Badge variant="destructive" className="text-xs">
+                  -{consecutiveMissedDays} level
+                </Badge>
+              )}
+            </div>
           </div>
         </div>
 
