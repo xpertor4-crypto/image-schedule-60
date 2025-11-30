@@ -34,6 +34,11 @@ export const CalendarGrid = ({ currentDate, events, onEventClick, viewMode }: Ca
   
   const currentHour = new Date().getHours();
   const today = new Date();
+  
+  // Responsive column widths
+  const isMobile = window.innerWidth < 768;
+  const TIME_COLUMN_WIDTH = isMobile ? 50 : 80;
+  const DAY_COLUMN_WIDTH = isMobile ? 80 : 150;
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -45,9 +50,10 @@ export const CalendarGrid = ({ currentDate, events, onEventClick, viewMode }: Ca
           const currentWeekStartIndex = allDays.findIndex(day => isSameDay(day, weekStart));
           if (currentWeekStartIndex !== -1) {
             // Position the start of the current week at the left edge of the viewport
-            const TIME_COLUMN_WIDTH = 80;
-            const DAY_COLUMN_WIDTH = 150;
-            const currentWeekLeftEdge = TIME_COLUMN_WIDTH + (currentWeekStartIndex * DAY_COLUMN_WIDTH);
+            const isMobile = window.innerWidth < 768;
+            const scrollTimeWidth = isMobile ? 50 : 80;
+            const scrollDayWidth = isMobile ? 80 : 150;
+            const currentWeekLeftEdge = scrollTimeWidth + (currentWeekStartIndex * scrollDayWidth);
             
             viewport.scrollTo({
               left: Math.max(0, currentWeekLeftEdge),
@@ -95,10 +101,10 @@ export const CalendarGrid = ({ currentDate, events, onEventClick, viewMode }: Ca
     const currentDay = currentDate;
     return (
       <div className="flex-1 overflow-auto bg-background">
-        <div className="min-w-[500px]">
-          <div className="grid grid-cols-[80px_1fr] bg-card sticky top-0 z-10 border-b border-border">
-            <div className="p-4"></div>
-            <div className="p-4 text-center border-l border-border">
+      <div className="min-w-[300px] md:min-w-[500px]">
+          <div className="grid grid-cols-[50px_1fr] md:grid-cols-[80px_1fr] bg-card sticky top-0 z-10 border-b border-border">
+            <div className="p-2 md:p-4"></div>
+            <div className="p-2 md:p-4 text-center border-l border-border">
               <div className="text-xs uppercase tracking-wide text-muted-foreground mb-1">
                 {format(currentDay, "EEEE")}
               </div>
@@ -115,10 +121,10 @@ export const CalendarGrid = ({ currentDate, events, onEventClick, viewMode }: Ca
                 <div
                   key={hour}
                   ref={isCurrentHour ? currentTimeRef : null}
-                  className="grid grid-cols-[80px_1fr] border-b border-grid-line"
-                  style={{ minHeight: "80px" }}
+                  className="grid grid-cols-[50px_1fr] md:grid-cols-[80px_1fr] border-b border-grid-line"
+                  style={{ minHeight: "60px" }}
                 >
-                  <div className="p-4 text-sm text-muted-foreground">
+                  <div className="p-2 md:p-4 text-xs md:text-sm text-muted-foreground">
                     {format(new Date().setHours(hour, 0), "HH:mm")}
                   </div>
                   <div className="border-l border-grid-line p-1 hover:bg-grid-hover transition-colors relative">
@@ -294,26 +300,26 @@ export const CalendarGrid = ({ currentDate, events, onEventClick, viewMode }: Ca
     <ScrollArea className="flex-1 bg-background" orientation="both">
       <div ref={weekViewRef} className="min-w-max h-full">
         {/* Header with days */}
-        <div className="grid bg-card sticky top-0 z-10 border-b border-border" style={{ gridTemplateColumns: `80px repeat(${allDays.length}, 150px)` }}>
-          <div className="p-4"></div>
+        <div className="grid bg-card sticky top-0 z-10 border-b border-border" style={{ gridTemplateColumns: `${TIME_COLUMN_WIDTH}px repeat(${allDays.length}, ${DAY_COLUMN_WIDTH}px)` }}>
+          <div className="p-2 md:p-4"></div>
           {allDays.map((day) => {
             const isToday = isSameDay(day, today);
             return (
               <div
                 key={day.toISOString()}
-                className="p-4 text-center border-l border-border"
+                className="p-1 md:p-4 text-center border-l border-border"
               >
-                <div className="text-xs uppercase tracking-wide text-muted-foreground mb-1">
+                <div className="text-[9px] md:text-xs uppercase tracking-wide text-muted-foreground mb-0.5 md:mb-1">
                   {format(day, "EEE")}
                 </div>
                 <div
-                  className={`text-2xl font-semibold ${
+                  className={`text-sm md:text-2xl font-semibold ${
                     isToday ? "text-primary" : "text-foreground"
                   }`}
                 >
                   {format(day, "d")}
                 </div>
-                <div className="text-xs text-muted-foreground">
+                <div className="text-[9px] md:text-xs text-muted-foreground">
                   {format(day, "MMM")}
                 </div>
               </div>
@@ -330,9 +336,9 @@ export const CalendarGrid = ({ currentDate, events, onEventClick, viewMode }: Ca
                 key={hour}
                 ref={isCurrentHour ? currentTimeRef : null}
                 className="grid border-b border-grid-line"
-                style={{ gridTemplateColumns: `80px repeat(${allDays.length}, 150px)`, minHeight: "80px" }}
+                style={{ gridTemplateColumns: `${TIME_COLUMN_WIDTH}px repeat(${allDays.length}, ${DAY_COLUMN_WIDTH}px)`, minHeight: isMobile ? "60px" : "80px" }}
               >
-              <div className="p-4 text-sm text-muted-foreground sticky left-0 bg-background z-10">
+              <div className="p-2 md:p-4 text-xs md:text-sm text-muted-foreground sticky left-0 bg-background z-10">
                 {format(new Date().setHours(hour, 0), "HH:mm")}
               </div>
               {allDays.map((day) => {

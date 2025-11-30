@@ -23,7 +23,7 @@ export const WeekStrip = ({ currentDate, onDateSelect }: WeekStripProps) => {
             key={day.toISOString()}
             onClick={() => onDateSelect(day)}
             className={cn(
-              "flex flex-col items-center gap-0.5 px-1.5 py-1 md:gap-1 md:px-3 md:py-2 rounded-lg min-w-[60px] md:min-w-[50px] transition-colors",
+              "flex flex-col items-center gap-0.5 px-1 py-1 md:gap-1 md:px-3 md:py-2 rounded-lg min-w-[45px] md:min-w-[50px] transition-colors",
               isSelected && "bg-app-accent text-app-accent-foreground",
               !isSelected && "hover:bg-muted"
             )}
