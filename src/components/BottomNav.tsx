@@ -17,7 +17,7 @@ export const BottomNav = () => {
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 bg-card border-t border-border shadow-lg z-50">
-      <div className="flex items-center justify-around px-4 py-3 max-w-screen-xl mx-auto">
+      <div className="flex items-center justify-around px-4 py-2 md:py-3 max-w-screen-xl mx-auto">
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = currentPath === item.path;
@@ -27,13 +27,13 @@ export const BottomNav = () => {
               key={item.id}
               onClick={() => navigate(item.path)}
               className={cn(
-                "flex flex-col items-center gap-1 min-w-[60px] transition-all duration-200 relative",
+                "flex flex-col items-center gap-0.5 md:gap-1 min-w-[50px] md:min-w-[60px] transition-all duration-200 relative",
                 isActive ? "transform scale-105" : ""
               )}
             >
               <div
                 className={cn(
-                  "flex items-center justify-center w-12 h-12 rounded-2xl transition-all duration-200",
+                  "flex items-center justify-center w-9 h-9 md:w-12 md:h-12 rounded-2xl transition-all duration-200",
                   isActive
                     ? "bg-primary shadow-md"
                     : "bg-transparent"
@@ -41,7 +41,7 @@ export const BottomNav = () => {
               >
                 <Icon
                   className={cn(
-                    "w-6 h-6 transition-colors duration-200",
+                    "w-5 h-5 md:w-6 md:h-6 transition-colors duration-200",
                     isActive ? "text-primary-foreground" : "text-muted-foreground"
                   )}
                   strokeWidth={2}
@@ -49,7 +49,7 @@ export const BottomNav = () => {
               </div>
               <span
                 className={cn(
-                  "text-xs font-medium transition-colors duration-200",
+                  "text-[10px] md:text-xs font-medium transition-colors duration-200",
                   isActive ? "text-primary" : "text-muted-foreground"
                 )}
               >
