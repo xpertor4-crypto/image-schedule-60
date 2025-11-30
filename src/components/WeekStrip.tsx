@@ -13,7 +13,7 @@ export const WeekStrip = ({ currentDate, onDateSelect }: WeekStripProps) => {
   const today = new Date();
 
   return (
-    <div className="flex gap-2 px-4 py-3 overflow-x-auto">
+    <div className="flex gap-1 px-2 py-2 md:gap-2 md:px-4 md:py-3 overflow-x-auto">
       {days.map((day) => {
         const isToday = isSameDay(day, today);
         const isSelected = isSameDay(day, currentDate);
@@ -23,16 +23,16 @@ export const WeekStrip = ({ currentDate, onDateSelect }: WeekStripProps) => {
             key={day.toISOString()}
             onClick={() => onDateSelect(day)}
             className={cn(
-              "flex flex-col items-center gap-1 px-3 py-2 rounded-lg min-w-[50px] transition-colors",
+              "flex flex-col items-center gap-0.5 px-2 py-1.5 md:gap-1 md:px-3 md:py-2 rounded-lg min-w-[35px] md:min-w-[50px] transition-colors",
               isSelected && "bg-app-accent text-app-accent-foreground",
               !isSelected && "hover:bg-muted"
             )}
           >
-            <span className="text-xs font-medium opacity-70">
+            <span className="text-[10px] md:text-xs font-medium opacity-70">
               {format(day, "EEE")}
             </span>
             <span className={cn(
-              "text-lg font-semibold",
+              "text-sm md:text-lg font-semibold",
               isToday && !isSelected && "text-app-accent"
             )}>
               {format(day, "d")}
