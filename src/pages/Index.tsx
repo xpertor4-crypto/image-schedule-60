@@ -7,6 +7,7 @@ import { TaskListItem } from "@/components/TaskListItem";
 import { EventDetailsDialog } from "@/components/EventDetailsDialog";
 import { AddEventDialog } from "@/components/AddEventDialog";
 import { CalendarGrid } from "@/components/CalendarGrid";
+import { LivestreamViewDialog } from "@/components/LivestreamViewDialog";
 import { CalendarHeader } from "@/components/CalendarHeader";
 import { useInstallPWA } from "@/hooks/use-install-pwa";
 import { addWeeks, subWeeks, isSameDay, format } from "date-fns";
@@ -46,6 +47,8 @@ const Index = () => {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [useCalendarView, setUseCalendarView] = useState(false);
   const [viewMode, setViewMode] = useState<"day" | "week" | "month" | "list">("week");
+  const [selectedLivestreamId, setSelectedLivestreamId] = useState<string>("");
+  const [isLivestreamViewOpen, setIsLivestreamViewOpen] = useState(false);
   const navigate = useNavigate();
   const { canInstall, handleInstall } = useInstallPWA();
 
@@ -186,8 +189,13 @@ const Index = () => {
   };
 
   const handleEventClick = (event: CalendarEvent) => {
-    setSelectedEvent(event);
-    setIsEventDialogOpen(true);
+    if (event.isLivestream && event.livestreamId) {
+      setSelectedLivestreamId(event.livestreamId);
+      setIsLivestreamViewOpen(true);
+    } else {
+      setSelectedEvent(event);
+      setIsEventDialogOpen(true);
+    }
   };
 
 
@@ -237,6 +245,13 @@ const Index = () => {
           open={isEventDialogOpen}
           onOpenChange={setIsEventDialogOpen}
           onStatusUpdate={fetchEvents}
+        />
+
+        <LivestreamViewDialog
+          open={isLivestreamViewOpen}
+          onOpenChange={setIsLivestreamViewOpen}
+          livestreamId={selectedLivestreamId}
+          title={selectedEvent?.title || "Livestream"}
         />
       </div>
     );
@@ -319,6 +334,13 @@ const Index = () => {
         open={isEventDialogOpen}
         onOpenChange={setIsEventDialogOpen}
         onStatusUpdate={fetchEvents}
+      />
+
+      <LivestreamViewDialog
+        open={isLivestreamViewOpen}
+        onOpenChange={setIsLivestreamViewOpen}
+        livestreamId={selectedLivestreamId}
+        title={selectedEvent?.title || "Livestream"}
       />
     </div>
   );
