@@ -1,9 +1,10 @@
+import { useState } from "react";
 import { ChevronLeft, ChevronRight, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 import { useTranslation } from "react-i18next";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
-import logo from "@/assets/logo.png";
+import { GoLiveDialog } from "@/components/GoLiveDialog";
 
 interface CalendarHeaderProps {
   currentDate: Date;
@@ -27,6 +28,7 @@ export const CalendarHeader = ({
   showDownload,
 }: CalendarHeaderProps) => {
   const { t } = useTranslation();
+  const [isGoLiveOpen, setIsGoLiveOpen] = useState(false);
   
   return (
     <header className="bg-card border-b border-border px-3 md:px-6 py-3 md:py-4">
@@ -34,7 +36,12 @@ export const CalendarHeader = ({
         {/* Date and Navigation - Stack on mobile */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4">
           <div className="flex items-center gap-2 sm:gap-3">
-            <img src={logo} alt="Logo" className="w-8 h-8 md:w-10 md:h-10" />
+            <Button 
+              onClick={() => setIsGoLiveOpen(true)}
+              className="rounded-full bg-primary hover:bg-primary/90 text-primary-foreground px-4 py-2 h-auto text-xs md:text-sm font-semibold shadow-md"
+            >
+              Go Live
+            </Button>
             <h1 className="text-xl md:text-2xl font-bold">
               {format(currentDate, "MMMM yyyy")}
             </h1>
@@ -80,6 +87,11 @@ export const CalendarHeader = ({
           )}
         </div>
       </div>
+
+      <GoLiveDialog 
+        open={isGoLiveOpen} 
+        onOpenChange={setIsGoLiveOpen}
+      />
     </header>
   );
 };

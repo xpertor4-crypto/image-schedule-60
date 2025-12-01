@@ -6,7 +6,7 @@ import { ScrollArea } from "./ui/scroll-area";
 interface Event {
   id: string;
   title: string;
-  type: "visit" | "appointment" | "activity";
+  type: "visit" | "appointment" | "activity" | "livestream";
   startTime: string;
   endTime: string;
   date: Date;

@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 interface CalendarEvent {
   id: string;
   title: string;
-  type: "visit" | "appointment" | "activity";
+  type: "visit" | "appointment" | "activity" | "livestream";
   startTime: string;
   endTime: string;
   date: Date;
@@ -25,12 +25,14 @@ const typeColors = {
   visit: "bg-event-visit",
   appointment: "bg-event-appointment",
   activity: "bg-event-activity",
+  livestream: "bg-red-500",
 };
 
 const typeLabels = {
   visit: "Habit",
   appointment: "Task",
   activity: "Habit",
+  livestream: "Live",
 };
 
 export const TaskListItem = ({ event, onClick }: TaskListItemProps) => {
