@@ -1,1 +1,13 @@
 project_id = "zscjbpqecuaqhyxekmdk"
+
+[functions.chat]
+verify_jwt = true
+
+[functions.setup-coaches]
+verify_jwt = true
+
+[functions.start-livestream]
+verify_jwt = true
+
+[functions.stop-livestream]
+verify_jwt = true

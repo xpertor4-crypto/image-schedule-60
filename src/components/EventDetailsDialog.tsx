@@ -10,7 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 interface Event {
   id: string;
   title: string;
-  type: "visit" | "appointment" | "activity";
+  type: "visit" | "appointment" | "activity" | "livestream";
   startTime: string;
   endTime: string;
   date: Date;

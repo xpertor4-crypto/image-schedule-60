@@ -21,7 +21,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 interface CalendarEvent {
   id: string;
   title: string;
-  type: "visit" | "appointment" | "activity";
+  type: "visit" | "appointment" | "activity" | "livestream";
   startTime: string;
   endTime: string;
   date: Date;
@@ -31,6 +31,8 @@ interface CalendarEvent {
   status?: string;
   evidenceUrl?: string;
   completedAt?: string;
+  isLivestream?: boolean;
+  livestreamId?: string;
 }
 
 const Index = () => {
@@ -71,19 +73,47 @@ const Index = () => {
     const savedView = localStorage.getItem('useCalendarView');
     setUseCalendarView(savedView === 'true');
 
-    return () => subscription.unsubscribe();
+    // Listen to realtime changes on livestream table
+    const livestreamChannel = supabase
+      .channel('livestream-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'livestream'
+        },
+        () => {
+          fetchEvents();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      subscription.unsubscribe();
+      supabase.removeChannel(livestreamChannel);
+    };
   }, [navigate]);
 
   const fetchEvents = async () => {
     try {
-      const { data, error } = await supabase
+      // Fetch regular events
+      const { data: eventsData, error: eventsError } = await supabase
         .from("events")
         .select("*")
         .order("start_time", { ascending: true });
 
-      if (error) throw error;
+      if (eventsError) throw eventsError;
 
-      const formattedEvents: CalendarEvent[] = data.map((event) => {
+      // Fetch active livestreams
+      const { data: livestreamsData, error: livestreamsError } = await supabase
+        .from("livestream")
+        .select("*, profiles(display_name)")
+        .eq("status", "active");
+
+      if (livestreamsError) throw livestreamsError;
+
+      const formattedEvents: CalendarEvent[] = eventsData.map((event) => {
         const startTime = new Date(event.start_time);
         const endTime = new Date(event.end_time);
         
@@ -108,7 +138,25 @@ const Index = () => {
         };
       });
 
-      setEvents(formattedEvents);
+      // Add livestreams as events
+      const livestreamEvents: CalendarEvent[] = (livestreamsData || []).map((stream: any) => {
+        const createdAt = new Date(stream.created_at);
+        return {
+          id: stream.id,
+          title: `🔴 LIVE: ${stream.title}`,
+          type: "livestream" as const,
+          startTime: `${createdAt.getHours()}:${String(createdAt.getMinutes()).padStart(2, '0')}`,
+          endTime: "Now",
+          date: createdAt,
+          description: `Live stream by ${stream.profiles?.display_name || 'Unknown'}`,
+          category: "livestream",
+          status: "active",
+          isLivestream: true,
+          livestreamId: stream.id,
+        };
+      });
+
+      setEvents([...formattedEvents, ...livestreamEvents]);
     } catch (error: any) {
       toast("Error loading events", {
         description: error.message || "Failed to load events",

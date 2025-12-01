@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils";
 interface Event {
   id: string;
   title: string;
-  type: "visit" | "appointment" | "activity";
+  type: "visit" | "appointment" | "activity" | "livestream";
   startTime: string;
   endTime: string;
 }
@@ -17,6 +17,7 @@ const eventStyles = {
   visit: "bg-event-visit-light border-event-visit text-event-visit",
   appointment: "bg-event-appointment-light border-event-appointment text-event-appointment",
   activity: "bg-event-activity-light border-event-activity text-event-activity",
+  livestream: "bg-red-50 border-red-500 text-red-700",
 };
 
 export const CalendarEvent = ({ event, onClick }: CalendarEventProps) => {
